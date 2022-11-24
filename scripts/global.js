@@ -72,12 +72,12 @@ var backgroundMusic;
 
 function changeMusic(map){
     if(backgroundMusic === undefined) {
-        backgroundMusic = new Audio("https://ju-nmd2022.github.io/wuid-adventure-game-arashtarafar/media/audio/music/BGM2_" + map + ".wav");
+        backgroundMusic = new Audio("../media/audio/music/BGM2_" + map + ".wav");
         
     }
     else{
         backgroundMusic.pause();
-        backgroundMusic.src = "https://ju-nmd2022.github.io/wuid-adventure-game-arashtarafar/media/audio/music/BGM2_" + map + ".wav";
+        backgroundMusic.src = "../media/audio/music/BGM2_" + map + ".wav";
     }
     backgroundMusic.volume = 0.1;
     backgroundMusic.loop = true;
@@ -85,7 +85,7 @@ function changeMusic(map){
 }
 
 function soundEffect(effectName){
-    let effectTrack = new Audio("https://ju-nmd2022.github.io/wuid-adventure-game-arashtarafar/media/audio/effects/FX_" + effectName + ".wav");
+    let effectTrack = new Audio("../media/audio/effects/FX_" + effectName + ".wav");
     effectTrack.volume = 0.1;
     effectTrack.play();
 }
@@ -105,7 +105,7 @@ init();
 
 function drawMap(){
     // Change map landscape
-    mapHandle.setAttribute("src", "https://ju-nmd2022.github.io/wuid-adventure-game-arashtarafar/media/images/still/zone_" + currentMap + ".png");
+    mapHandle.setAttribute("src", "../media/images/still/zone_" + currentMap + ".png");
 
     // Remove all NPCs and items from screen
     for(let iterator =  0; iterator < document.querySelectorAll(".npc").length; iterator++){
@@ -253,24 +253,24 @@ document.addEventListener("keydown", function(event){
 
     if(keyCode === "ArrowLeft"){                
         if(!characterRunning) {
-            characterHandle.setAttribute("src", "https://ju-nmd2022.github.io/wuid-adventure-game-arashtarafar/media/images/animated/character_knight_walking.gif");
+            characterHandle.setAttribute("src", "../media/images/animated/character_knight_walking.gif");
             characterHandle.style.transform = "scaleX(-1)";
             characterRunning = true;
             characterDirection = false;
         }
         movementKeyPressCount++;
-        if(movementKeyPressCount === 2) characterHandle.setAttribute("src", "https://ju-nmd2022.github.io/wuid-adventure-game-arashtarafar/media/images/animated/character_knight_running.gif");
+        if(movementKeyPressCount === 2) characterHandle.setAttribute("src", "../media/images/animated/character_knight_running.gif");
         if(movementKeyPressCount >= 2)characterPosition -= characterSpeed;
     }
     else if(keyCode === "ArrowRight"){                
         if(!characterRunning) {
-            characterHandle.setAttribute("src", "https://ju-nmd2022.github.io/wuid-adventure-game-arashtarafar/media/images/animated/character_knight_walking.gif");
+            characterHandle.setAttribute("src", "../media/images/animated/character_knight_walking.gif");
             characterHandle.style.transform = "scaleX(1)";
             characterRunning = true;
             characterDirection = true;
         }
         movementKeyPressCount++;
-        if(movementKeyPressCount === 2) characterHandle.setAttribute("src", "https://ju-nmd2022.github.io/wuid-adventure-game-arashtarafar/media/images/animated/character_knight_running.gif");
+        if(movementKeyPressCount === 2) characterHandle.setAttribute("src", "../media/images/animated/character_knight_running.gif");
         if(movementKeyPressCount >= 2)characterPosition += characterSpeed;
     }
     // UP and DOWN arrow keys set for flash navigation between maps (DEVELOPER MODE)
@@ -299,7 +299,7 @@ document.addEventListener("keydown", function(event){
 });
 
 document.addEventListener("keyup", function(event){
-    if(characterRunning) characterHandle.setAttribute("src", "https://ju-nmd2022.github.io/wuid-adventure-game-arashtarafar/media/images/animated/character_knight_idle.png");
+    if(characterRunning) characterHandle.setAttribute("src", "../media/images/animated/character_knight_idle.png");
     characterRunning = false;
     movementKeyPressCount = 0;
 });
