@@ -14,7 +14,17 @@ var inDeveloperMode = false;
 // Game state variables
 
 var enlightened = false;
+var chestLocked = true;
+
 var movementKeyPressCount = 0;
+
+var dialogBonesState = 0;
+var dialogArcanaState = 0;
+var dialogFiremageState = 0;
+var dialogIcemageState = 0;
+var dialogBlacksmithState = 0;
+
+var characterInventory = [];
 
 // Character handle and attributes
 
@@ -22,7 +32,7 @@ const characterHandle = document.querySelector("#character");
 var characterPosition = 800;
 var characterSpeed = 5;
 var characterRunning = false;
-var characterDirection = true; // true == RIGHT | false == LEFT
+var characterDirection = false; // true == RIGHT | false == LEFT
 
 
 // Map landscape handle
@@ -66,12 +76,16 @@ const DialogIcemageHandle = document.querySelector("#dialog_icemage");
 
 // Handles for items
 
-// items...
-
+const ItemAshesHandle = document.querySelector("#item_ashes");
+const ItemChestHandle = document.querySelector("#item_chest");
+const ItemMetalsHandle = document.querySelector("#item_metals");
+const ItemGemHandle = document.querySelector("#item_gem");
 
 // Handles for environment
 
-// environment elements...
+const EnvironmentTornadoWestHandle = document.querySelector("#obstacle_tornado_west");
+const EnvironmentTornadoEastHandle = document.querySelector("#obstacle_tornado_east");
+const EnvironmentTornadoesHandle = document.querySelector(".obstacle_tornado");
 
 
 // Initiate audio system
@@ -101,11 +115,79 @@ function soundEffect(effectName){
     effectTrack.play();
 }
 
+function placeMapElements(){
+    // NPC placement
+    NPCArcanaHandle.style.left = "1200px";
+    NPCBonesHandle.style.left = "500px";
+    NPCFiremageHandle.style.left = "650px";
+    NPCIcemageHandle.style.left = "900px";
+    NPCBlacksmithHandle.style.left = "400px";
+    // Item placement
+    ItemAshesHandle.style.left = "600px";
+    ItemChestHandle.style.left = "290px";
+    ItemMetalsHandle.style.left = "350px";
+    ItemGemHandle.style.left = "1250px";
+}
+
+/////////////////////////////////////////////////////////////////  INVENTORY LOGIC FUNCTIONS  ////////////////////////////////////////////////////////////////
+
+function updateInventory(){
+    for(var iterator = 1; iterator <= characterInventory.length; iterator++){
+        document.querySelector("#inventory_slot_" + iterator + " img").src = currentPrefix + "/media/images/still/item_" + characterInventory[iterator - 1] + ".png";
+        document.querySelector("#inventory_slot_" + iterator).dataset.full = "true";
+        for(var removalIterator = iterator + 1; removalIterator <= 3; removalIterator++){
+            document.querySelector("#inventory_slot_" + removalIterator).dataset.full = "false";
+        }
+    }
+    for(var iterator = 1; iterator <= 3; iterator++){
+        if(document.querySelector("#inventory_slot_" + iterator).dataset.full === "false")
+        document.querySelector("#inventory_slot_" + iterator + " img").src = currentPrefix + "/media/images/still/inventory_slot_empty.png";
+    }
+}
+
+function inventoryHasSpace(){
+    return (characterInventory.length < 3);
+}
+
+function isInInventory(item){
+    let isInInventory = false;
+    for(var iterator = 0; iterator < characterInventory.length; iterator++){
+        if(characterInventory[iterator] === item){
+            isInInventory = true;
+            break;
+        }
+    }
+    return isInInventory;
+}
+
+function addToInventory(item){
+    characterInventory.push(item);
+    updateInventory();
+}
+
+function removeFromInventory(item){
+    for(var iterator = 0; iterator < characterInventory.length; iterator++){
+        if(characterInventory[iterator] === item){
+            characterInventory.splice(iterator, 1);
+        }
+    }
+    updateInventory();
+}
 
 // Initializer function
 function init(){
     currentMap = "island";
-    characterHandle.style.transform = "translateX(" + characterPosition + "px) scaleX(-1)";
+    placeMapElements();
+    switch(characterDirection){
+        case true:
+            characterHandle.style.transform = "translateX(" + characterPosition + "px) scaleX(1)";
+            break;
+        case false:
+            characterHandle.style.transform = "translateX(" + characterPosition + "px) scaleX(-1)";
+            break;
+        default:
+            break;
+    }
     drawMap();
 }
 
@@ -128,38 +210,49 @@ function drawMap(){
     for(let iterator =  0; iterator < document.querySelectorAll(".dialog").length; iterator++){
         document.querySelectorAll(".dialog")[iterator].style.display = "none";
     }
+    for(let iterator =  0; iterator < document.querySelectorAll(".item").length; iterator++){
+        document.querySelectorAll(".item")[iterator].style.display = "none";
+    }
+    for(let iterator =  0; iterator < document.querySelectorAll(".obstacle").length; iterator++){
+        document.querySelectorAll(".obstacle")[iterator].style.display = "none";
+    }
 
     // Populate map with items and NPCs based on its type
     switch (currentMap){
         case "desert":
             mapNameHandle.innerHTML = "The Vast Desert";
             NPCBlacksmithHandle.style.display = "block";
-            PopupBlacksmithHandle.style.display = "block";
-            DialogBlacksmithHandle.style.display = "block";
+            if(!enlightened) EnvironmentTornadoEastHandle.style.display = "block";
+            // PopupBlacksmithHandle.style.display = "block";
+            // DialogBlacksmithHandle.style.display = "block";
+            ItemChestHandle.style.display = "block";
             break;
         case "crimsonwood":
             mapNameHandle.innerHTML = "Crimsonwood";
             NPCFiremageHandle.style.display = "block";
-            PopupFiremageHandle.style.display = "block";
-            DialogFiremageHandle.style.display = "block";
+            // PopupFiremageHandle.style.display = "block";
+            // DialogFiremageHandle.style.display = "block";            
             break;
         case "gloomwood":
             mapNameHandle.innerHTML = "Gloomwood";
             NPCArcanaHandle.style.display = "block";
-            PopupArcanaHandle.style.display = "block";
-            DialogArcanaHandle.style.display = "block";
+            // PopupArcanaHandle.style.display = "block";
+            // DialogArcanaHandle.style.display = "block";
+            ItemAshesHandle.style.display = "block";            
             break;
         case "island":
             mapNameHandle.innerHTML = "The Island";
             NPCBonesHandle.style.display = "block";
-            PopupBonesHandle.style.display = "block";
-            DialogBonesHandle.style.display = "block";
+            // PopupBonesHandle.style.display = "block";
+            // DialogBonesHandle.style.display = "block";
+            ItemGemHandle.style.display = "block";
+            if(!enlightened) EnvironmentTornadoWestHandle.style.display = "block";            
             break;
         case "sunpeaks":
             mapNameHandle.innerHTML = "Sunpeaks";
             NPCIcemageHandle.style.display = "block";
-            PopupIcemageHandle.style.display = "block";
-            DialogIcemageHandle.style.display = "block";
+            // PopupIcemageHandle.style.display = "block";
+            // DialogIcemageHandle.style.display = "block";
             break;
     }
     
@@ -273,7 +366,7 @@ document.addEventListener("keydown", function(event){
         if(movementKeyPressCount === 2) characterHandle.setAttribute("src", currentPrefix + "/media/images/animated/character_knight_running.gif");
         if(movementKeyPressCount >= 2)characterPosition -= characterSpeed;
     }
-    else if(keyCode === "ArrowRight"){                
+    else if(keyCode === "ArrowRight"){
         if(!characterRunning) {
             characterHandle.setAttribute("src", currentPrefix + "/media/images/animated/character_knight_walking.gif");
             characterHandle.style.transform = "scaleX(1)";
@@ -285,12 +378,10 @@ document.addEventListener("keydown", function(event){
         if(movementKeyPressCount >= 2)characterPosition += characterSpeed;
     }
     /////////////////////////////////// UP and DOWN arrow keys set for flash navigation between maps (DEVELOPER MODE) ////////////////////////////
-    else if(keyCode === "ArrowUp"){
-        inDeveloperMode = true;
+    else if(keyCode === "ArrowUp" && inDeveloperMode){
         characterDirection = true;
         changeMap(true);
-    }else if(keyCode === "ArrowDown"){
-        inDeveloperMode = true;
+    }else if(keyCode === "ArrowDown" && inDeveloperMode){
         characterDirection = false;
         changeMap(false);
     }
@@ -330,29 +421,250 @@ characterHandle.addEventListener("click", function(){
 // NPC Interactions
 
 NPCBonesHandle.addEventListener("click", function(){
-    soundEffect("dialog_bones");
+    let questsCompleted = false;
+
+    let NPCPosition = parseInt(this.style.left.slice(0, this.style.left.length - 2));
+    if(((characterPosition > NPCPosition) && ((characterPosition - NPCPosition) < 150) && !characterDirection)){
+        PopupBonesHandle.style.display = "block";
+        switch(dialogBonesState){
+            case 0:
+                DialogBonesHandle.innerHTML = "Another lost risen? This one still has armor...";
+                break;
+            case 1:
+                DialogBonesHandle.innerHTML = "I was once a wanderer like you. Ages had mine ground to dust. Oh how I long its scent...";
+                break;
+            case 2:
+                DialogBonesHandle.innerHTML = "Happeneth thee upon the ashes, bring me them. I shall repay you with whatever I have left...";
+                break;
+            case 3:
+                if(isInInventory("ashes")){
+                    DialogBonesHandle.innerHTML = "Kindness in this lost land... From a spawn of darkness no less. Here is the last glimmer for thee...";
+                    if(inventoryHasSpace()){
+                        removeFromInventory("ashes");
+                        addToInventory("key");
+                        soundEffect("item_pickup");
+                        questsCompleted = true;
+                        dialogBonesState = 4;
+                    } else{
+                        eventMessageHandle.innerHTML = "I cannot carry any more...";
+                    }
+                } else dialogBonesState -= 2;
+                break;
+            case 4:
+                questsCompleted = true;
+                DialogBonesHandle.innerHTML = "Kind undead... Happeneth thee upon the sun, break the cycle. Release us... I beg thee...";
+                break;
+        }
+        if(!questsCompleted) dialogBonesState = (dialogBonesState + 1) % 4;
+        DialogBonesHandle.style.display = "block";
+        soundEffect("dialog_bones");
+    }    
+
 });
 
 NPCArcanaHandle.addEventListener("click", function(){
-    soundEffect("dialog_arcana");
+    let questsCompleted = false;
+
+    let NPCPosition = parseInt(this.style.left.slice(0, this.style.left.length - 2));
+    if(((characterPosition < NPCPosition) && ((NPCPosition - characterPosition) < 120) && characterDirection)){
+        PopupArcanaHandle.style.display = "block";
+        switch(dialogArcanaState){
+            case 0:
+                DialogArcanaHandle.innerHTML = "Who dares set foot in the grave itself... Foolish, are you not? Or... A soul?";
+                break;
+            case 1:
+                DialogArcanaHandle.innerHTML = "My power wanes. And yet the shattering of the ring brings void a step closer with each passing night...";
+                break;
+            case 2:
+                DialogArcanaHandle.innerHTML = "Bring me a ring. I shall give you what you crave. Even if for the worse...";
+                break;
+            case 3:
+                if(isInInventory("ring_diamond")){
+                    removeFromInventory("ring_diamond");
+                    DialogArcanaHandle.innerHTML = "My dark returns! No chill can master the one of the void. And bargain as great.";
+                } else {
+                    dialogArcanaState -= 2;
+                }
+                break;
+            case 4:                
+                DialogArcanaHandle.innerHTML = "Seeketh thee the frost plume, not? My brethren awaits thee over yonder...";
+                addToInventory("feather");
+                soundEffect("item_pickup");
+                questsCompleted = true;
+                dialogArcanaState = 5;
+                break;
+            case 5:
+                questsCompleted = true;
+                DialogArcanaHandle.innerHTML = "Traveled to world's end yet, haven't you? Seldom hope you have child... Tarry or not.";
+                break;
+        }
+        if(!questsCompleted) dialogArcanaState = (dialogArcanaState + 1) % 5;
+        DialogArcanaHandle.style.display = "block";
+        soundEffect("dialog_arcana");
+    }   
 });
 
 NPCFiremageHandle.addEventListener("click", function(){
-    soundEffect("dialog_firemage");
+    let questsCompleted = false;
+
+    let NPCPosition = parseInt(this.style.left.slice(0, this.style.left.length - 2));
+    if(((characterPosition > NPCPosition) && ((characterPosition - NPCPosition) < 150) && !characterDirection)){
+        PopupFiremageHandle.style.display = "block";
+        switch(dialogFiremageState){
+            case 0:
+                DialogFiremageHandle.innerHTML = "If only we had held on a little longer. Seldom hope had the fire...";
+                break;
+            case 1:
+                if(isInInventory("bar_bronze_2")){
+                    DialogFiremageHandle.innerHTML = "Ingots? The truth of our cycle...? Hmmm I suppose the last of my spark will be of use...";                    
+                } else dialogFiremageState -= 2;
+                break;
+            case 2:
+                DialogFiremageHandle.innerHTML = "Here, take this and light a fire... Give us hope. Hope...";
+                removeFromInventory("bar_bronze_2");
+                addToInventory("ore_coal_2");
+                soundEffect("item_pickup");
+                questsCompleted = true;
+                dialogFiremageState = 3;
+                break;
+            case 3:
+                questsCompleted = true;
+                DialogFiremageHandle.innerHTML = "Make a fire in storm's eye. Let deceit crumble. Save this world, I beg thee...";
+                break;                
+        }
+        if(!questsCompleted) dialogFiremageState = (dialogFiremageState + 1) % 3;
+        DialogFiremageHandle.style.display = "block";
+        soundEffect("dialog_firemage");
+    }   
 });
 
 NPCBlacksmithHandle.addEventListener("click", function(){
-    soundEffect("dialog_blacksmith");
+    let questsCompleted = false;
+
+    let NPCPosition = parseInt(this.style.left.slice(0, this.style.left.length - 2));
+    if(((characterPosition > NPCPosition) && ((characterPosition - NPCPosition) < 150) && !characterDirection)){
+        PopupBlacksmithHandle.style.display = "block";
+        switch(dialogBlacksmithState){
+            case 0:
+                DialogBlacksmithHandle.innerHTML = "What hope has a soul without vessel for armor? Oh, you are... Mayhaps...";
+                break;
+            case 1:
+                DialogBlacksmithHandle.innerHTML = "A ring you say? Hmmm needs a gem of some sort, and binding. Bring me the metal and stone...";
+                break;
+            case 2:
+                if(isInInventory("ore_coal_2") && isInInventory("diamond_1")){
+                    removeFromInventory("ore_coal_2");
+                    removeFromInventory("diamond_1");
+                    DialogBlacksmithHandle.innerHTML = "Now let me see... This fire has seen many blades and ornaments. What spark is this...";
+                } else dialogBlacksmithState -= 2;
+                break;
+            case 3:
+                DialogBlacksmithHandle.innerHTML = "A fine ring it is indeed. Take care, wanderer. Lest the glimmer claims your soul. Irony...";
+                addToInventory("ring_diamond");
+                soundEffect("item_pickup");
+                questsCompleted = true;
+                dialogBlacksmithState = 4;
+                break;
+            case 4:
+                questsCompleted = true;
+                DialogBlacksmithHandle.innerHTML = "Had I this then, that cold sun would bow. Have you now the stone...? Heh heh...";
+                break;                
+        }
+        if(!questsCompleted) dialogBlacksmithState = (dialogBlacksmithState + 1) % 4;
+        DialogBlacksmithHandle.style.display = "block";
+        soundEffect("dialog_blacksmith");
+    }   
 });
 
 NPCIcemageHandle.addEventListener("click", function(){
-    soundEffect("dialog_icemage");
+    let NPCPosition = parseInt(this.style.left.slice(0, this.style.left.length - 2));
+    if(((characterPosition < NPCPosition) && ((NPCPosition - characterPosition) < 120) && characterDirection)){
+        PopupIcemageHandle.style.display = "block";
+        switch(dialogIcemageState){
+            case 0:
+                DialogIcemageHandle.innerHTML = "Foolish undead. What hope have you for breaking the true cycle...";
+                break;
+            case 1:
+                DialogIcemageHandle.innerHTML = "I have spoken. There is no hope for your kind. That ended with Elden Ring release...";
+                break;
+            case 2:
+                DialogIcemageHandle.innerHTML = "Go touch some grace. Mayhaps get yourself some maidens...";
+                break;
+        }
+        dialogIcemageState = (dialogIcemageState + 1) % 3;
+        DialogIcemageHandle.style.display = "block";
+        soundEffect("dialog_icemage");
+    }   
 });
 
 // Item Pickup
 
+ItemAshesHandle.addEventListener("click", function(){
+    let itemPosition = parseInt(this.style.left.slice(0, this.style.left.length - 2));
+    if(((characterPosition > itemPosition) && ((characterPosition - itemPosition) < 100) && !characterDirection) || 
+    ((characterPosition < itemPosition) && ((itemPosition - characterPosition) < 140) && characterDirection)){        
+        if(inventoryHasSpace()){
+            addToInventory("ashes");
+            ItemAshesHandle.remove();
+        } else{
+            eventMessageHandle.innerHTML = "I cannot carry any more...";
+        }
+        soundEffect("item_pickup");
+    }    
+});
 
+ItemChestHandle.addEventListener("click", function(){
+    let itemPosition = parseInt(this.style.left.slice(0, this.style.left.length - 2));
+    if(((characterPosition < itemPosition) && ((itemPosition - characterPosition) < 140) && characterDirection)){
+        if(chestLocked && isInInventory("key")){
+            chestLocked = false;
+            ItemChestHandle.style.transform = "scaleX(-1) rotate(-90deg)";
+            ItemMetalsHandle.style.display = "block";
+            soundEffect("item_pickup");
+        } else if(chestLocked){
+            eventMessageHandle.innerHTML = "The chest is locked...";
+        }        
+    }    
+});
 
+ItemMetalsHandle.addEventListener("click", function(){
+    let itemPosition = parseInt(this.style.left.slice(0, this.style.left.length - 2));
+    if(((characterPosition > itemPosition) && ((characterPosition - itemPosition) < 100) && !characterDirection) || 
+    ((characterPosition < itemPosition) && ((itemPosition - characterPosition) < 140) && characterDirection)){        
+        if(inventoryHasSpace()){
+            addToInventory("bar_bronze_2");
+            ItemMetalsHandle.remove();
+        } else{
+            eventMessageHandle.innerHTML = "I cannot carry any more...";
+        }
+        soundEffect("item_pickup");
+    }  
+});
+
+ItemGemHandle.addEventListener("click", function(){
+    let itemPosition = parseInt(this.style.left.slice(0, this.style.left.length - 2));
+    if(((characterPosition > itemPosition) && ((characterPosition - itemPosition) < 100) && !characterDirection) || 
+    ((characterPosition < itemPosition) && ((itemPosition - characterPosition) < 140) && characterDirection)){        
+        if(inventoryHasSpace()){
+            addToInventory("diamond_1");
+            ItemGemHandle.remove();
+        } else{
+            eventMessageHandle.innerHTML = "I cannot carry any more...";
+        }
+        soundEffect("item_pickup");
+    }    
+});
 
 // Environment Interactions
 
+EnvironmentTornadoesHandle.addEventListener("click", function(){
+    if(isInInventory("feather")){
+        removeFromInventory("feather");
+        EnvironmentTornadoWestHandle.remove();
+        EnvironmentTornadoEastHandle.remove();
+        eventMessageHandle.innerHTML = "The fog recedes at the distant screech of phoenix.";
+        enlightened = true;
+    } else{
+        eventMessageHandle.innerHTML = "No steel or will breaks the wind...";
+    }
+});

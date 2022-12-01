@@ -49,13 +49,23 @@ main{
 }
 
 .inventory-slot{
-    display: block;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     width: 100%;
     height: 30%;
     background-color: rgba(0, 0, 0, 0.3);
     border: 3px solid rgba(190, 190, 190, 0.4);
     border-radius: 15px;
     box-shadow: 1px 1px 70px rgb(49, 49, 49);
+}
+
+.inventory-slot:hover{
+    cursor: url("../media/images/still/cursor_inventory.png"), pointer;
+}
+
+.inventory_slot_image{
+    width: 66%;
 }
 
 /*****************************************************************  GAME WINDOW LAYOUT  *********************************************************************************/
@@ -152,32 +162,27 @@ main{
 #npc_arcana{    
     width: 120px;
     bottom: 20px;
-    left: 1200px;
 }
 
 #npc_bones{    
     width: 100px;
     bottom: 0;
-    left: 500px;
 }
 
 #npc_firemage{
     width: 120px;
     bottom: 0;
-    left: 650px;
     transform: scaleX(-1);
 }
 
 #npc_icemage{
     width: 120px;
     bottom: 0;
-    left: 900px;
 }
 
 #npc_blacksmith{
     width: 80px;
     bottom: 203px;
-    left: 400px;
 }
 
 /*****************************************************************  POPUP PLACEMENT  *********************************************************************************/
@@ -223,26 +228,64 @@ main{
 }
 
 #dialog_arcana{
-    bottom: 235px;
+    top: calc(100vh - 307px);
     left: 1052px;
 }
 
 #dialog_bones{
-    bottom: 115px;
-    left: 440px;
+    top: calc(100vh - 190px);
+    left: 430px;
 }
 
 #dialog_firemage{
-    bottom: 190px;
+    top: calc(100vh - 260px);
     left: 581px;
 }
 
 #dialog_blacksmith{
-    bottom: 340px;
+    top: calc(100vh - 410px);
     left: 310px;
 }
 
 #dialog_icemage{
-    bottom: 200px;
+    top: calc(100vh - 287px);
     left: 770px;
+}
+
+/*****************************************************************  OBSTACLE PLACEMENT  *********************************************************************************/
+
+.obstacle:hover{
+    cursor: url("../media/images/still/cursor_grab.png"), pointer;
+}
+
+.obstacle_tornado{
+    position: absolute;
+    width: 100px;
+    bottom: 0;
+    z-index: 1;
+}
+
+#obstacle_tornado_west{
+    right: 0;
+}
+
+#obstacle_tornado_east{
+    left: 0;
+    transform: scaleX(-1);
+}
+
+/*****************************************************************  ITEM PLACEMENT  *********************************************************************************/
+
+.item{
+    position: absolute;
+    width: 50px;
+    bottom: 0;
+}
+
+#item_chest{
+    transform: scaleX(-1);
+}
+
+.item:hover{
+    cursor: url("../media/images/still/cursor_grab.png"), pointer;
 }
