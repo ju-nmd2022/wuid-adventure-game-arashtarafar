@@ -122,6 +122,13 @@ function soundEffect(effectName){
     effectTrack.play();
 }
 
+function riddleSoundEffect(){
+    let effectNumber = Math.ceil(Math.random() * 5);
+    let effectTrack = new Audio(currentPrefix + "/media/audio/effects/FX_riddle_" + effectNumber + ".mp3");
+    effectTrack.volume = 0.1;
+    effectTrack.play();
+}
+
 function placeMapElements(){
     // NPC placement
     NPCArcanaHandle.style.left = "1200px";
@@ -327,6 +334,8 @@ function drawMap(){
         case "sunpeaks":
             mapNameHandle.innerHTML = "Sunpeaks";
             NPCIcemageHandle.style.display = "block";
+            // Play the animal noise riddle sound
+            riddleSoundEffect();
             break;
     }
     
