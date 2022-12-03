@@ -21,7 +21,105 @@ main{
     grid-template-columns: repeat(6, 1fr);
     grid-template-rows: repeat(5, 1fr);   
 }
+/*******************************************************************  START SCREEN  ***********************************************************************************/
 
+.start-screen{
+    /* width: 100vw;
+    height: 100vh; */
+    position: relative;
+    z-index: 1;
+    grid-row: 1/6;
+    grid-column: 1/7;
+    background-color: rgb(190, 190, 190);    
+    opacity: 1;
+    /* transition: opacity 0.7s; */
+}
+
+.start-screen.closed{
+    /* opacity: 0; */
+    animation-name: fadeout;
+    animation-duration: 1s;
+    animation-iteration-count: 1;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: both;
+}
+
+@keyframes fadeout{
+    0%{
+        opacity: 1;
+    }
+    99%{
+        opacity: 0;
+    }
+    100%{
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+.start-screen h1{
+    font-size: 250%;
+    font-family: 'Times New Roman', Times, serif;
+    color: rgb(15, 15, 15);
+    text-align: center;
+    margin: 50px 0;
+}
+
+.start-panels{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    margin-top: 150px;    
+}
+
+.start-panels h2{
+    font-size: 200%;
+    text-align: center;
+    color: rgb(48, 48, 48);
+    margin-bottom: 100px;
+}
+
+.panel-instructions{
+    width: 20%;
+    color: rgb(88, 88, 88);
+}
+
+.panel-instructions div{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 30px;
+}
+
+.panel-instructions span{
+    display: inline-block;
+    font-size: 120%;
+}
+
+.btn-start-option{
+    display: block;
+    width: 80%;
+    text-align: center;
+    padding: 50px;
+    margin: 0 auto 60px auto;
+    border: 3px solid rgb(88, 88, 88);
+    color: rgb(88, 88, 88);
+    font-size: 150%;
+    transition: all 0.7s;
+}
+
+.btn-start-option:hover{
+    background-color: rgb(88, 88, 88);
+    color: rgb(196, 196, 196);
+}
+
+#btn-load-game.disabled{
+    color: rgb(255, 100, 100);
+}
+
+#btn-load-game.disabled:hover{
+    background-color: transparent;
+}
 /*****************************************************************  INVENTORY LAYOUT  *********************************************************************************/
 
 .inventory{

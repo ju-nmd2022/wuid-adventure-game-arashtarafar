@@ -13,26 +13,33 @@ var inDeveloperMode = false;
 
 // Game state variables
 
-var enlightened = false;
-var chestLocked = true;
+var gameStarted = false;
+
+var enlightened;
+var chestLocked;
 
 var movementKeyPressCount = 0;
 
-var dialogBonesState = 0;
-var dialogArcanaState = 0;
-var dialogFiremageState = 0;
-var dialogIcemageState = 0;
-var dialogBlacksmithState = 0;
+var dialogBonesState;
+var dialogArcanaState;
+var dialogFiremageState;
+var dialogIcemageState;
+var dialogBlacksmithState;
 
 var characterInventory = [];
+
+// Start button handles
+
+const newGameHandle = document.querySelector("#btn-new-game");
+const loadGameHandle = document.querySelector("#btn-load-game");
 
 // Character handle and attributes
 
 const characterHandle = document.querySelector("#character");
-var characterPosition = 800;
+var characterPosition;
 var characterSpeed = 5;
 var characterRunning = false;
-var characterDirection = false; // true == RIGHT | false == LEFT
+var characterDirection; // true == RIGHT | false == LEFT
 
 
 // Map landscape handle
@@ -129,6 +136,101 @@ function placeMapElements(){
     ItemGemHandle.style.left = "1250px";
 }
 
+function saveData(dataType){
+    switch(dataType){
+        case "character":
+            localStorage.characterPosition = characterPosition;
+            localStorage.characterDirection = characterDirection;
+            break;
+        case "inventory":
+            for(var iterator = 0; iterator < characterInventory.length; iterator++){
+                localStorage.setItem("inventory_" + (iterator + 1), characterInventory[iterator]);
+            }
+            for(var iterator = characterInventory.length; iterator < 3; iterator++){
+                localStorage.removeItem("inventory_" + (iterator + 1));
+            }
+            break;
+        case "dialog":
+            localStorage.dialogBonesState = dialogBonesState;
+            localStorage.dialogArcanaState = dialogArcanaState;
+            localStorage.dialogFiremageState = dialogFiremageState;
+            localStorage.dialogBlacksmithState = dialogBlacksmithState;
+            localStorage.dialogIcemageState = dialogIcemageState;
+            localStorage.dialogs = true;
+            break;
+        case "chest":
+            localStorage.chestLocked = chestLocked;
+            break;
+        case "item":
+            // Removal of items hardcoded into respective interaction functions
+            break; 
+        case "map":
+            localStorage.currentMap = currentMap;
+            break;       
+        case "end":
+            localStorage.enlightened = true;
+            break;
+    }
+    localStorage.saveDataAvailable = true;
+}
+
+function loadLastSave(){
+    // Load character data
+    characterPosition = Number(localStorage.characterPosition);
+    characterDirection = (localStorage.characterDirection === "true");
+
+    // Load map data
+    if(localStorage.currentMap) currentMap = localStorage.currentMap;
+
+    // Load NPC dialog data
+    if(localStorage.dialogs){
+        dialogBonesState = Number(localStorage.dialogBonesState);
+        dialogArcanaState = Number(localStorage.dialogArcanaState);
+        dialogFiremageState = Number(localStorage.dialogFiremageState);
+        dialogBlacksmithState = Number(localStorage.dialogBlacksmithState);
+        dialogIcemageState = Number(localStorage.dialogIcemageState);
+    }
+
+    // Load inventory data
+    for(var iterator = 1; iterator <=3; iterator++){
+        if(localStorage.getItem("inventory_" + iterator)) characterInventory[iterator - 1] = localStorage.getItem("inventory_" + iterator);
+    }
+    updateInventory();    
+
+    // Load chest data
+    if(localStorage.chestLocked === "false"){
+        chestLocked = false;
+        ItemChestHandle.style.transform = "scaleX(-1) rotate(-90deg)";
+    }
+
+    // Load item existence data
+    if(localStorage.ashesPicked === "true") ItemAshesHandle.remove();
+    if(localStorage.gemPicked === "true") ItemGemHandle.remove();
+    if(localStorage.metalsPicked === "true") ItemMetalsHandle.remove();
+
+    // Load game finished state
+    if(localStorage.enlightened){
+        enlightened = true;
+        EnvironmentTornadoWestHandle.remove();
+        EnvironmentTornadoEastHandle.remove();
+    }
+}
+
+// Initializer function
+function init(){
+    placeMapElements();
+    switch(characterDirection){
+        case true:
+            characterHandle.style.transform = "translateX(" + characterPosition + "px) scaleX(1)";
+            break;
+        case false:
+            characterHandle.style.transform = "translateX(" + characterPosition + "px) scaleX(-1)";
+            break;
+        default:
+            break;
+    }
+    drawMap();
+}
 /////////////////////////////////////////////////////////////////  INVENTORY LOGIC FUNCTIONS  ////////////////////////////////////////////////////////////////
 
 function updateInventory(){
@@ -174,26 +276,6 @@ function removeFromInventory(item){
     updateInventory();
 }
 
-// Initializer function
-function init(){
-    currentMap = "island";
-    placeMapElements();
-    switch(characterDirection){
-        case true:
-            characterHandle.style.transform = "translateX(" + characterPosition + "px) scaleX(1)";
-            break;
-        case false:
-            characterHandle.style.transform = "translateX(" + characterPosition + "px) scaleX(-1)";
-            break;
-        default:
-            break;
-    }
-    drawMap();
-}
-
-// Call initializer once at the start of our game
-init();
-
 /////////////////////////////////////////////////////////////////  MAP DRAW FUNCTIONS  /////////////////////////////////////////////////////////////////
 
 function drawMap(){
@@ -217,42 +299,34 @@ function drawMap(){
         document.querySelectorAll(".obstacle")[iterator].style.display = "none";
     }
 
+
     // Populate map with items and NPCs based on its type
     switch (currentMap){
         case "desert":
             mapNameHandle.innerHTML = "The Vast Desert";
             NPCBlacksmithHandle.style.display = "block";
             if(!enlightened) EnvironmentTornadoEastHandle.style.display = "block";
-            // PopupBlacksmithHandle.style.display = "block";
-            // DialogBlacksmithHandle.style.display = "block";
             ItemChestHandle.style.display = "block";
+            if(!localStorage.metalsPicked && !chestLocked) ItemMetalsHandle.style.display = "block";
             break;
         case "crimsonwood":
             mapNameHandle.innerHTML = "Crimsonwood";
-            NPCFiremageHandle.style.display = "block";
-            // PopupFiremageHandle.style.display = "block";
-            // DialogFiremageHandle.style.display = "block";            
+            NPCFiremageHandle.style.display = "block";        
             break;
         case "gloomwood":
             mapNameHandle.innerHTML = "Gloomwood";
             NPCArcanaHandle.style.display = "block";
-            // PopupArcanaHandle.style.display = "block";
-            // DialogArcanaHandle.style.display = "block";
             ItemAshesHandle.style.display = "block";            
             break;
         case "island":
             mapNameHandle.innerHTML = "The Island";
             NPCBonesHandle.style.display = "block";
-            // PopupBonesHandle.style.display = "block";
-            // DialogBonesHandle.style.display = "block";
             ItemGemHandle.style.display = "block";
             if(!enlightened) EnvironmentTornadoWestHandle.style.display = "block";            
             break;
         case "sunpeaks":
             mapNameHandle.innerHTML = "Sunpeaks";
             NPCIcemageHandle.style.display = "block";
-            // PopupIcemageHandle.style.display = "block";
-            // DialogIcemageHandle.style.display = "block";
             break;
     }
     
@@ -341,13 +415,20 @@ function changeMap(direction){
         }
     }
 
-    if(mapChange) drawMap();
+    if(mapChange){
+        drawMap();
+
+        // Save map data
+        saveData("map");
+    }
 }
 
 /////////////////////////////////////////////////////////////////  CHARACTER KEYBOARD INPUT  /////////////////////////////////////////////////////////////////
 
 // Listen for keyboard event
 document.addEventListener("keydown", function(event){
+    if(!gameStarted) return;
+
     // Retrieve detected key data
     let keyName = event.key;
     let keyCode = event.code;
@@ -401,12 +482,14 @@ document.addEventListener("keydown", function(event){
         changeMap(characterDirection);
     }
     
+    // Save character data
+    saveData("character");
 });
 
 document.addEventListener("keyup", function(event){
     if(characterRunning) characterHandle.setAttribute("src", currentPrefix + "/media/images/animated/character_knight_idle.png");
     characterRunning = false;
-    movementKeyPressCount = 0;
+    movementKeyPressCount = 0;    
 });
 
 /////////////////////////////////////////////////////////////////  MOUSE CLICK EVENTS  /////////////////////////////////////////////////////////////////
@@ -420,7 +503,7 @@ characterHandle.addEventListener("click", function(){
 
 // NPC Interactions
 
-NPCBonesHandle.addEventListener("click", function(){
+NPCBonesHandle.addEventListener("click", function(){    
     let questsCompleted = false;
 
     let NPCPosition = parseInt(this.style.left.slice(0, this.style.left.length - 2));
@@ -437,12 +520,14 @@ NPCBonesHandle.addEventListener("click", function(){
                 DialogBonesHandle.innerHTML = "Happeneth thee upon the ashes, bring me them. I shall repay you with whatever I have left...";
                 break;
             case 3:
+                DialogBonesHandle.innerHTML = "Happeneth thee upon the ashes, bring me them. I shall repay you with whatever I have left...";
                 if(isInInventory("ashes")){
                     DialogBonesHandle.innerHTML = "Kindness in this lost land... From a spawn of darkness no less. Here is the last glimmer for thee...";
                     if(inventoryHasSpace()){
                         removeFromInventory("ashes");
                         addToInventory("key");
                         soundEffect("item_pickup");
+                        saveData("inventory");
                         questsCompleted = true;
                         dialogBonesState = 4;
                     } else{
@@ -453,13 +538,13 @@ NPCBonesHandle.addEventListener("click", function(){
             case 4:
                 questsCompleted = true;
                 DialogBonesHandle.innerHTML = "Kind undead... Happeneth thee upon the sun, break the cycle. Release us... I beg thee...";
-                break;
-        }
-        if(!questsCompleted) dialogBonesState = (dialogBonesState + 1) % 4;
+                break;                
+        }        
+        if(!questsCompleted) dialogBonesState = (dialogBonesState + 1) % 4;        
         DialogBonesHandle.style.display = "block";
         soundEffect("dialog_bones");
-    }    
-
+        saveData("dialog");
+    }
 });
 
 NPCArcanaHandle.addEventListener("click", function(){
@@ -479,8 +564,10 @@ NPCArcanaHandle.addEventListener("click", function(){
                 DialogArcanaHandle.innerHTML = "Bring me a ring. I shall give you what you crave. Even if for the worse...";
                 break;
             case 3:
+                DialogArcanaHandle.innerHTML = "Bring me a ring. I shall give you what you crave. Even if for the worse...";
                 if(isInInventory("ring_diamond")){
                     removeFromInventory("ring_diamond");
+                    saveData("inventory");
                     DialogArcanaHandle.innerHTML = "My dark returns! No chill can master the one of the void. And bargain as great.";
                 } else {
                     dialogArcanaState -= 2;
@@ -490,6 +577,7 @@ NPCArcanaHandle.addEventListener("click", function(){
                 DialogArcanaHandle.innerHTML = "Seeketh thee the frost plume, not? My brethren awaits thee over yonder...";
                 addToInventory("feather");
                 soundEffect("item_pickup");
+                saveData("inventory");
                 questsCompleted = true;
                 dialogArcanaState = 5;
                 break;
@@ -501,6 +589,7 @@ NPCArcanaHandle.addEventListener("click", function(){
         if(!questsCompleted) dialogArcanaState = (dialogArcanaState + 1) % 5;
         DialogArcanaHandle.style.display = "block";
         soundEffect("dialog_arcana");
+        saveData("dialog");
     }   
 });
 
@@ -515,26 +604,32 @@ NPCFiremageHandle.addEventListener("click", function(){
                 DialogFiremageHandle.innerHTML = "If only we had held on a little longer. Seldom hope had the fire...";
                 break;
             case 1:
+                DialogFiremageHandle.innerHTML = "The glory of the fire waned, with it our spark. barely to keep warm in the chill of the grave...";
+                break;
+            case 2:
+                DialogFiremageHandle.innerHTML = "The glory of the fire waned, with it our spark. barely to keep warm in the chill of the grave...";
                 if(isInInventory("bar_bronze_2")){
                     DialogFiremageHandle.innerHTML = "Ingots? The truth of our cycle...? Hmmm I suppose the last of my spark will be of use...";                    
                 } else dialogFiremageState -= 2;
                 break;
-            case 2:
+            case 3:
                 DialogFiremageHandle.innerHTML = "Here, take this and light a fire... Give us hope. Hope...";
                 removeFromInventory("bar_bronze_2");
                 addToInventory("ore_coal_2");
                 soundEffect("item_pickup");
+                saveData("inventory");
                 questsCompleted = true;
-                dialogFiremageState = 3;
+                dialogFiremageState = 4;
                 break;
-            case 3:
+            case 4:
                 questsCompleted = true;
                 DialogFiremageHandle.innerHTML = "Make a fire in storm's eye. Let deceit crumble. Save this world, I beg thee...";
                 break;                
         }
-        if(!questsCompleted) dialogFiremageState = (dialogFiremageState + 1) % 3;
+        if(!questsCompleted) dialogFiremageState = (dialogFiremageState + 1) % 4;
         DialogFiremageHandle.style.display = "block";
         soundEffect("dialog_firemage");
+        saveData("dialog");
     }   
 });
 
@@ -552,9 +647,11 @@ NPCBlacksmithHandle.addEventListener("click", function(){
                 DialogBlacksmithHandle.innerHTML = "A ring you say? Hmmm needs a gem of some sort, and binding. Bring me the metal and stone...";
                 break;
             case 2:
+                DialogBlacksmithHandle.innerHTML = "A ring you say? Hmmm needs a gem of some sort, and binding. Bring me the metal and stone...";
                 if(isInInventory("ore_coal_2") && isInInventory("diamond_1")){
                     removeFromInventory("ore_coal_2");
                     removeFromInventory("diamond_1");
+                    saveData("inventory");
                     DialogBlacksmithHandle.innerHTML = "Now let me see... This fire has seen many blades and ornaments. What spark is this...";
                 } else dialogBlacksmithState -= 2;
                 break;
@@ -562,6 +659,7 @@ NPCBlacksmithHandle.addEventListener("click", function(){
                 DialogBlacksmithHandle.innerHTML = "A fine ring it is indeed. Take care, wanderer. Lest the glimmer claims your soul. Irony...";
                 addToInventory("ring_diamond");
                 soundEffect("item_pickup");
+                saveData("inventory");
                 questsCompleted = true;
                 dialogBlacksmithState = 4;
                 break;
@@ -573,6 +671,7 @@ NPCBlacksmithHandle.addEventListener("click", function(){
         if(!questsCompleted) dialogBlacksmithState = (dialogBlacksmithState + 1) % 4;
         DialogBlacksmithHandle.style.display = "block";
         soundEffect("dialog_blacksmith");
+        saveData("dialog");
     }   
 });
 
@@ -594,6 +693,7 @@ NPCIcemageHandle.addEventListener("click", function(){
         dialogIcemageState = (dialogIcemageState + 1) % 3;
         DialogIcemageHandle.style.display = "block";
         soundEffect("dialog_icemage");
+        saveData("dialog");
     }   
 });
 
@@ -605,7 +705,9 @@ ItemAshesHandle.addEventListener("click", function(){
     ((characterPosition < itemPosition) && ((itemPosition - characterPosition) < 140) && characterDirection)){        
         if(inventoryHasSpace()){
             addToInventory("ashes");
+            saveData("inventory");
             ItemAshesHandle.remove();
+            localStorage.ashesPicked = true;
         } else{
             eventMessageHandle.innerHTML = "I cannot carry any more...";
         }
@@ -624,7 +726,8 @@ ItemChestHandle.addEventListener("click", function(){
         } else if(chestLocked){
             eventMessageHandle.innerHTML = "The chest is locked...";
         }        
-    }    
+    }
+    saveData("chest");
 });
 
 ItemMetalsHandle.addEventListener("click", function(){
@@ -633,7 +736,9 @@ ItemMetalsHandle.addEventListener("click", function(){
     ((characterPosition < itemPosition) && ((itemPosition - characterPosition) < 140) && characterDirection)){        
         if(inventoryHasSpace()){
             addToInventory("bar_bronze_2");
+            saveData("inventory");
             ItemMetalsHandle.remove();
+            localStorage.metalsPicked = true;
         } else{
             eventMessageHandle.innerHTML = "I cannot carry any more...";
         }
@@ -647,7 +752,9 @@ ItemGemHandle.addEventListener("click", function(){
     ((characterPosition < itemPosition) && ((itemPosition - characterPosition) < 140) && characterDirection)){        
         if(inventoryHasSpace()){
             addToInventory("diamond_1");
+            saveData("inventory");
             ItemGemHandle.remove();
+            localStorage.gemPicked = true;
         } else{
             eventMessageHandle.innerHTML = "I cannot carry any more...";
         }
@@ -664,7 +771,58 @@ EnvironmentTornadoesHandle.addEventListener("click", function(){
         EnvironmentTornadoEastHandle.remove();
         eventMessageHandle.innerHTML = "The fog recedes at the distant screech of phoenix.";
         enlightened = true;
+        saveData("inventory");
+        saveData("end");
     } else{
         eventMessageHandle.innerHTML = "No steel or will breaks the wind...";
     }
 });
+
+/////////////////////////////////////////////////////////////////  START BUTTON CLICKS  ////////////////////////////////////////////////////////////////
+
+newGameHandle.addEventListener("click", function(){
+    // Clear all save data
+    localStorage.clear();
+
+    // Set default values
+    enlightened = false;
+    chestLocked = true;
+    characterPosition = 800;
+    characterDirection = false;
+    currentMap = "island";
+    dialogBonesState = dialogArcanaState = dialogFiremageState = dialogIcemageState = dialogBlacksmithState = 0;
+
+    // Call initializer at the start of our game
+    init();
+
+    // Close the start screen
+    document.querySelector(".start-screen").classList.add("closed");
+    gameStarted = true;
+});
+
+loadGameHandle.addEventListener("click", function(){
+    // If there is no save data, do nothing
+    if(!(localStorage.saveDataAvailable === "true")) return;
+
+    // Set default values
+    enlightened = false;
+    chestLocked = true;
+    characterPosition = 800;
+    characterDirection = false;
+    currentMap = "island";
+    dialogBonesState = dialogArcanaState = dialogFiremageState = dialogIcemageState = dialogBlacksmithState = 0;
+
+    loadLastSave();
+
+    // Call initializer at the start of our game
+    init();
+
+    // Close the start screen
+    document.querySelector(".start-screen").classList.add("closed");
+    gameStarted = true;
+});
+
+/////////////////////////////////////////////////////////////////  GLOBAL LAUNCH OPTIONS  ////////////////////////////////////////////////////////////////
+
+// Learned and taken from "stackoverflow.com", answer by user "guinaps". Revised by multiple members of the community wiki
+if(!(localStorage.saveDataAvailable === "true"))loadGameHandle.classList.add("disabled");
